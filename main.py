@@ -2,7 +2,7 @@ import pygame
 from random import choice
 
 RES = WIDTH, HEIGHT = 725, 725
-TILE = 100
+TILE = 25
 COLS, ROWS = WIDTH // TILE, HEIGHT // TILE
 
 pygame.init()
@@ -16,10 +16,12 @@ class Cell:
         self.x, self.y = x, y
         self.walls = {"top": True, "bottom": True, "right": True, "left": True}
         self.visited = False #has the cell been visited/unvisited
-        self.end = False # if the cell is the end cell (when to end the program)
+        self.end = False # if the cell is the end cell (when to end the search program)
 
     def draw(self):
         x, y = self.x * TILE, self.y * TILE
+        if self.end:
+            pygame.draw.rect(screen, 'red', (x, y, TILE, TILE))
         if self.visited:
             pygame.draw.rect(screen, 'white', (x, y, TILE, TILE))
 
@@ -61,6 +63,23 @@ class Cell:
             neighbors.append(left)
 
         return choice(neighbors) if neighbors else False
+    
+def remove_walls(current, next):
+    dx = current.x - next.x
+    if dx == 1:
+        current.walls['left'] = False
+        next.walls['right'] = False
+    elif dx == -1:
+        current.walls['right'] = False
+        next.walls['left'] = False
+    dy = current.y - next.y
+    if dy == 1:
+        current.walls['top'] = False
+        next.walls['bottom'] = False
+    elif dy == -1:
+        current.walls['bottom'] = False
+        next.walls['top'] = False
+
 
 grid_cells = [Cell(col, row) for row in range(ROWS) for col in range(COLS)]
 current_cell = grid_cells[0]
@@ -84,8 +103,9 @@ while running:
     next_cell = current_cell.check_neighbors(grid_cells)
     if next_cell:
         next_cell.visited = True
+        remove_walls(current_cell, next_cell)
         current_cell = next_cell
 
 
     pygame.display.flip()
-    dt = clock.tick(30)
+    dt = clock.tick(60)
