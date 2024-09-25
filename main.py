@@ -90,24 +90,34 @@ def remove_walls(current, next):
         next.walls['top'] = False
 
 def bfs(root):
-    q = deque
+    q = deque()
     q.append(root)
-    res = []
 
     while q:
-        pop = q.popleft()
-        pop.draw_current_path_cell()
-        if pop.end:
+        node = q.popleft()
+        x, y = node.x * TILE, node.y * TILE
+        node.draw_current_path_cell()
+        if node.end:
             return False
-        if not root.walls['top']:
-            q.append(self.check_cell(self.x, self.y - 1))
-        if not root.walls['bottom']:
-            q.append(self.check_cell(self.x, self.y + 1))
-        if not root.walls['left']:
-            q.append(self.check_cell(self.x - 1, self.y))
-        if not root.walls['right']:
-            q.append(self.check_cell(self.x + 1, self.y))
-    #    root.bfsvisited = True
+
+        #need to somehow find a way to go node = node.next or something like that
+        x, y = node.x, node.y
+        if not node.walls['top'] and not node.bfsvisited:
+            if node.check_cell(x, y-1):
+                q.append(node.check_cell(x, y-1)) 
+        if not node.walls['bottom'] and not node.bfsvisited:
+            if node.check_cell(x, y+1):
+                q.append(node.check_cell(x, y+1))
+        if not node.walls['left'] and not node.bfsvisited:
+            if node.check_cell(x-1, y):
+                q.append(node.check_cell(x-1, y)) 
+        if not node.walls['right'] and not node.bfsvisited:
+            if node.check_cell(x+1, y):
+                q.append(node.check_cell(x+1, y)) 
+        
+        node.bfsvisited = True
+
+
 
 grid_cells = [Cell(col, row) for row in range(ROWS) for col in range(COLS)]
 current_cell = grid_cells[0]
