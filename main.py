@@ -3,7 +3,7 @@ from random import choice
 from collections import deque
 
 RES = WIDTH, HEIGHT = 725, 725
-TILE = 75
+TILE = 50
 COLS, ROWS = WIDTH // TILE, HEIGHT // TILE
 
 pygame.init()
@@ -29,6 +29,7 @@ class Cell:
         if x == (COLS - 1) * TILE and y == (ROWS - 1) * TILE:
             self.end == True
             pygame.draw.rect(screen, 'red', (x, y, TILE, TILE))
+           # print((COLS - 1) * TILE, (ROWS - 1) * TILE)
 
         if self.walls['top']:
             pygame.draw.line(screen, 'black', (x, y), (x + TILE, y), 2)
@@ -41,10 +42,12 @@ class Cell:
     
     def draw_current_cell(self):
         x, y = self.x * TILE, self.y * TILE
+        print('draw current cell: ', x, y)
         pygame.draw.rect(screen, 'green', (x+2, y+2, TILE - 2, TILE - 2))
 
     def draw_current_path_cell(self):
         x, y = self.x * TILE, self.y * TILE
+        print('draw current path cell: ', x, y)
         pygame.draw.rect(screen, 'orange', (x+2, y+2, TILE - 2, TILE - 2))
     
     def check_cell(self, x, y):
@@ -89,34 +92,53 @@ def remove_walls(current, next):
         current.walls['bottom'] = False
         next.walls['top'] = False
 
+def draw(root):
+        current_cell = grid_cells[0]
+        stack = []
+
+        [cell.draw() for cell in grid_cells]
+        current_cell.visited = True
+        current_cell.draw_current_cell()
+
+        next_cell = current_cell.check_neighbors(grid_cells)
+        if next_cell: # there are no longer any next cells
+            next_cell.visited = True
+            stack.append(current_cell)
+            remove_walls(current_cell, next_cell)
+            current_cell = next_cell
+        elif stack:
+            current_cell = stack.pop()
+
 def bfs(root):
     q = deque()
     q.append(root)
 
     while q:
         node = q.popleft()
-        x, y = node.x * TILE, node.y * TILE
-        node.draw_current_path_cell()
+        print(node.x, node.y)
+        node.draw_current_cell()
         if node.end:
-            return False
+            return
 
         #need to somehow find a way to go node = node.next or something like that
         x, y = node.x, node.y
-        if not node.walls['top'] and not node.bfsvisited:
-            if node.check_cell(x, y-1):
+        if not node.walls['top']:
+            if node.check_cell(x, y-1) and not node.bfsvisited:
                 q.append(node.check_cell(x, y-1)) 
-        if not node.walls['bottom'] and not node.bfsvisited:
-            if node.check_cell(x, y+1):
+                node.bfsvisited = True
+        if not node.walls['bottom']:
+            if node.check_cell(x, y+1) and not node.bfsvisited:
                 q.append(node.check_cell(x, y+1))
-        if not node.walls['left'] and not node.bfsvisited:
-            if node.check_cell(x-1, y):
+                node.bfsvisited = True
+        if not node.walls['left']:
+            if node.check_cell(x-1, y) and not node.bfsvisited:
                 q.append(node.check_cell(x-1, y)) 
-        if not node.walls['right'] and not node.bfsvisited:
-            if node.check_cell(x+1, y):
+                node.bfsvisited = True
+        if not node.walls['right']:
+            if node.check_cell(x+1, y) and not node.bfsvisited:
                 q.append(node.check_cell(x+1, y)) 
+                node.bfsvisited = True
         
-        node.bfsvisited = True
-
 
 
 grid_cells = [Cell(col, row) for row in range(ROWS) for col in range(COLS)]
@@ -133,22 +155,23 @@ while running:
         running = False
     if keys[pygame.K_b]:
         bfs(grid_cells[0])
-
+    # if keys[pygame.K_w]:
+    #     draw(0)
 
     screen.fill('gray')
+
     [cell.draw() for cell in grid_cells]
     current_cell.visited = True
     current_cell.draw_current_cell()
 
     next_cell = current_cell.check_neighbors(grid_cells)
-    if next_cell: # there are no longer any next cells
+    if next_cell: # there are next cells
         next_cell.visited = True
         stack.append(current_cell)
         remove_walls(current_cell, next_cell)
         current_cell = next_cell
-    elif stack:
+    elif stack: # there are no more next cells
         current_cell = stack.pop()
-
 
     pygame.display.flip()
     dt = clock.tick(100)
